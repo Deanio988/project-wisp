@@ -32,9 +32,10 @@ function readiness(){
  const variety=new Set(state.careKinds).size;
  return {ready:state.trust>=55&&state.warmth>=40&&developed>=3&&variety>=3,developed,variety};
 }
-let hatchAnimating=false;
+let hatchAnimating=false;let worldTimer=null;
 function render(){
  const born=state.hatched&&!hatchAnimating,egg=$("creature");
+ const world=$("living-world");world.hidden=!born;$("world-status").hidden=!born;$("creature").closest(".scene").classList.toggle("world-active",born);
  if(born){egg.textContent="🌱"}else if(!$("egg-art")){egg.innerHTML='<img id="egg-art" src="assets/living-egg.svg" alt="">'}
  egg.className=born?"egg hatched":"egg";
  egg.setAttribute("aria-label",born?"Your newly hatched forest companion":"An illustrated magical egg");
@@ -49,12 +50,15 @@ function render(){
  document.querySelectorAll(".milestones span").forEach((el,i)=>el.classList.toggle("active",i<=(state.hatched?3:r.ready?2:r.developed>0?1:0)));
  $("messages").replaceChildren();
  for(const m of state.messages){const div=document.createElement("div");div.className="bubble "+(m.who==="You"?"you":"");const strong=document.createElement("strong");strong.textContent=m.who;const body=document.createElement("span");body.textContent=m.text;div.append(strong,body);$("messages").append(div)}
+ if(born){const p=state.hatchedProfile||profile();$("world-status").textContent=state.name+" has entered the woodland home. "+(state.worldActivity||("Feeling "+p.primary+" and looking around."));startWorld()}else{stopWorld()}
  $("messages").scrollTop=$("messages").scrollHeight;
  save();
 }
+function stopWorld(){if(worldTimer!==null){clearInterval(worldTimer);worldTimer=null}}
+function startWorld(){if(worldTimer!==null)return;worldTimer=setInterval(()=>{if(!state.hatched||hatchAnimating)return;const p=state.hatchedProfile||profile();const options={curiosity:["Investigating a trail of glowing spores.","Exploring near the old tree."],sociability:["Looking toward you for company.","Practising a little greeting."],calm:["Resting beneath the shade.","Watching clouds drift overhead."],courage:["Venturing toward the pond.","Exploring beyond the cottage."],affection:["Returning to the cottage to see you.","Curling up near the doorway."],playfulness:["Chasing a drifting leaf.","Hopping between the flowers."]};const choices=options[p.primary]||options.curiosity;state.worldSteps=Number(state.worldSteps||0)+1;state.worldActivity=choices[state.worldSteps%choices.length];const positions=[30,48,67,42,58];$("world-pet").style.left=positions[state.worldSteps%positions.length]+"%";$("world-status").textContent=state.name+": "+state.worldActivity;save()},7000)}
 function hatch(){
  if(state.hatched||!readiness().ready)return;
- state.hatched=true;state.hatchedProfile=profile();
+ state.hatched=true;state.hatchedProfile=profile();state.worldActivity="Taking the first steps into a new woodland home.";
  hatchAnimating=true;
  speak("...peep! The shell opens. A "+state.hatchedProfile.primary+" little spirit peeks out, with a hint of "+state.hatchedProfile.secondary+".");
  render();
@@ -78,5 +82,5 @@ $("chat-form").addEventListener("submit",event=>{
  speak(state.hatched?"I'm listening. Tell me more about that.":"The egg gives a gentle tap. It knows your voice.");
  render();
 });
-$("reset").addEventListener("click",()=>{if(confirm("Start a new story? This erases your saved egg and personality.")){state=fresh();render()}});
+$("reset").addEventListener("click",()=>{if(confirm("Start a new story? This erases your saved egg and personality.")){stopWorld();state=fresh();$("world-pet").style.left="45%";render()}});
 render();
