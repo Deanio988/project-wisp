@@ -17,3 +17,7 @@
 @keyframes crack{25%{transform:translateX(-5px) rotate(-3deg)}75%{transform:translateX(5px) rotate(3deg)}}
 @keyframes flash{0%,100%{opacity:0}45%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.egg,.egg.wiggle,.egg.cracking,#hatch-flash.active{animation:none!important}}
+
+/* Formative egg personality panel */
+.traits-panel{margin:20px 0;padding:16px;border:1px solid #668773;border-radius:18px;background:#1d3933}
+.traits-panel h2{margin:0 0 14px}.trait-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.trait{display:flex;flex-direction:column;gap:6px;font-size:13px;text-transform:capitalize}.trait progress{margin:0;height:12px;accent-color:#d8c58a}.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.actions button{min-width:0}@media(max-width:450px){.actions{grid-template-columns:repeat(2,minmax(0,1fr))}.trait-list{gap:9px}}
