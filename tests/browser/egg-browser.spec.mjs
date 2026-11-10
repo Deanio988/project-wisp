@@ -78,3 +78,30 @@ test("reduced motion skips cinematic",async({browser})=>{
  await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatched",{timeout:2000});
  await context.close();
 });
+
+test("legacy save import copies progress without changing original",async({page})=>{
+ await page.goto(base);
+ const legacy={warmth:72,trust:66,hatched:true,traits:{curiosity:12,affection:9},name:"Mossling"};
+ await page.evaluate(value=>localStorage.setItem("project-wisp-v1",JSON.stringify(value)),legacy);
+ page.once("dialog",dialog=>dialog.accept());
+ await page.locator("#import-legacy").click();
+ await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatched");
+ const saves=await page.evaluate(()=>({
+  original:JSON.parse(localStorage.getItem("project-wisp-v1")),
+  imported:JSON.parse(localStorage.getItem("project-wisp-egg-preview-v2"))
+ }));
+ expect(saves.original).toEqual(legacy);
+ expect(saves.imported.hatch.birthRecord.legacy).toBe(true);
+ expect(saves.imported.needs.comfort).toBe(72);
+ expect(saves.imported.needs.security).toBe(66);
+ await page.reload();
+ await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatched");
+});
+test("legacy import cancellation leaves both saves unchanged",async({page})=>{
+ await page.goto(base);
+ const before=await page.evaluate(()=>localStorage.getItem("project-wisp-egg-preview-v2"));
+ await page.evaluate(()=>localStorage.setItem("project-wisp-v1",JSON.stringify({hatched:true})));
+ page.once("dialog",dialog=>dialog.dismiss());
+ await page.locator("#import-legacy").click();
+ expect(await page.evaluate(()=>localStorage.getItem("project-wisp-egg-preview-v2"))).toBe(before);
+});
