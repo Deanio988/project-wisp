@@ -25,7 +25,7 @@ export function createEgg(seed){
  if(!Number.isSafeInteger(seed)||seed<0)throw new TypeError("Seed must be a non-negative safe integer");
  return {schemaVersion:2,seed,id:"egg-"+seed,stage:"dormant",turn:0,genetics:deriveGenetics(seed),
  personality:blank(TRAITS),needs:{comfort:60,energy:65,stimulation:35,security:50},
- preferences:blank(Object.keys(ACTIONS)),development:{experience:0,activityCounts:blank(Object.keys(ACTIONS)),familyInfluence:blank(FAMILIES),milestones:[]},
+ preferences:blank(Object.keys(ACTIONS)),development:{experience:0,activityCounts:blank(Object.keys(ACTIONS)),familyInfluence:blank(FAMILIES),milestones:[],familyEvents:blank(FAMILIES)},
  journal:[],events:[],hatch:{status:"incubating",family:null,birthRecord:null}};
 }
 const diversity=s=>Object.values(s.development.activityCounts).filter(n=>n>0).length;
@@ -57,7 +57,7 @@ function familyFor(s){
  const scores=FAMILIES.map(f=>{
   const genetic=s.genetics.affinities[f];
   const care=clamp(s.development.familyInfluence[f]/(maxCount*3),0,1);
-  const events=clamp(s.development.milestones.filter(m=>m==="stage-"+f).length/2,0,1);
+  const events=clamp(s.development.familyEvents[f]/(maxCount*2),0,1);
   return {family:f,score:.45*genetic+.35*care+.20*events,tie:hash(s.seed+":"+f)};
  });
  scores.sort((a,b)=>b.score-a.score||a.tie-b.tie);
@@ -70,21 +70,21 @@ export function applyCare(original,action){
  if(s.hatch.status!=="incubating")return s;
  const a=ACTIONS[action];s.turn++;
  const count=s.development.activityCounts[action];
- const multiplier=count>=5?.3:count>=2?.6:1;
- const energyFactor=s.needs.energy<20&&action!=="rest"&&action!=="comfort"?.5:1;
+ const multiplier=count>=5?.45:count>=2?.7:1;
+ const energyFactor=s.needs.energy<20&&action!=="rest"&&action!=="comfort"?.65:1;
  const gain=multiplier*energyFactor;
  for(const [t,value] of Object.entries(a.traits))s.personality[t]=clamp(s.personality[t]+value*gain);
  for(const [n,value] of Object.entries(a.needs))s.needs[n]=clamp(s.needs[n]+value*(.5+s.genetics.sensitivity));
  s.development.activityCounts[action]++;
  s.development.experience+=gain*(1+s.genetics.adaptability*.25);
  s.preferences[action]=clamp(s.preferences[action]+(s.needs.comfort>=30?1:-1)*gain,-20,20);
- for(const [f,value] of Object.entries(a.family))s.development.familyInfluence[f]+=value*gain;
+ for(const [f,value] of Object.entries(a.family)){s.development.familyInfluence[f]+=value*gain;if(s.development.activityCounts[action]===1)s.development.familyEvents[f]+=value}
  s.events.push({id:"care-"+s.turn,action,turn:s.turn});
  if(s.events.length>200)s.events=s.events.slice(-200);
  if(s.turn===1)addJournal(s,"first-care","memory","You cared for the egg for the first time.");
  if(preferenceEstablished(s))addJournal(s,"first-preference","observation","The egg is beginning to show a preference for familiar activities.");
  transition(s);
- const r=getReadiness(s);
+ // A gentle recovery floor prevents exhausted or uncomfortable eggs from deadlocking.\n if(s.turn%8===0){s.needs.energy=clamp(s.needs.energy+12);s.needs.comfort=clamp(s.needs.comfort+8);s.needs.security=clamp(s.needs.security+8)}\n const r=getReadiness(s);
  if(r.ready){
   const family=familyFor(s);
   s.hatch={status:"ready",family,birthRecord:{
@@ -104,8 +104,8 @@ export function completeHatch(original){
 export function migrateLegacy(old,seed){
  const s=createEgg(seed);
  if(!old||typeof old!=="object")return s;
- s.needs.comfort=clamp(Number(old.warmth)||50);
- s.needs.security=clamp(Number(old.trust)||0);
+ s.needs.comfort=clamp(old.warmth==null?50:Number(old.warmth));
+ s.needs.security=clamp(old.trust==null?0:Number(old.trust));
  for(const t of TRAITS)s.personality[t]=clamp(Number(old.traits?.[t])||0);
  // Legacy actions are not reconstructed: unknown experiences must not be invented.
  if(old.hatched===true){
