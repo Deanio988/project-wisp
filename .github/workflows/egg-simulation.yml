@@ -1,0 +1,20 @@
+name: Egg Simulation Tests
+on:
+  push:
+    branches: [feature/living-egg-v0.2]
+  pull_request:
+    paths:
+      - 'simulation/**'
+      - 'tests/**'
+      - '.github/workflows/egg-simulation.yml'
+  workflow_dispatch:
+jobs:
+  egg-simulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run unit tests and 1000-egg simulation
+        run: node --test tests/*.test.mjs
