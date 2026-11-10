@@ -1,0 +1,27 @@
+name: Browser Acceptance Tests
+on:
+  push:
+    branches: [feature/living-egg-v0.2]
+    paths:
+      - 'preview/**'
+      - 'simulation/**'
+      - 'tests/browser/**'
+      - '.github/workflows/egg-browser.yml'
+  workflow_dispatch:
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test runner
+        run: npm install --no-save playwright @playwright/test
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start local preview server
+        run: python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/wisp-server.log 2>&1 &
+      - name: Run desktop, mobile and hatching browser tests
+        run: npx playwright test tests/browser/egg-browser.spec.mjs --project=chromium --workers=1 --reporter=line
