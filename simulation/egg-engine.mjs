@@ -84,7 +84,9 @@ export function applyCare(original,action){
  if(s.turn===1)addJournal(s,"first-care","memory","You cared for the egg for the first time.");
  if(preferenceEstablished(s))addJournal(s,"first-preference","observation","The egg is beginning to show a preference for familiar activities.");
  transition(s);
- // A gentle recovery floor prevents exhausted or uncomfortable eggs from deadlocking.\n if(s.turn%8===0){s.needs.energy=clamp(s.needs.energy+12);s.needs.comfort=clamp(s.needs.comfort+8);s.needs.security=clamp(s.needs.security+8)}\n const r=getReadiness(s);
+ // A gentle recovery floor prevents exhausted or uncomfortable eggs from deadlocking.
+ if(s.turn%8===0){s.needs.energy=clamp(s.needs.energy+12);s.needs.comfort=clamp(s.needs.comfort+8);s.needs.security=clamp(s.needs.security+8)}
+ const r=getReadiness(s);
  if(r.ready){
   const family=familyFor(s);
   s.hatch={status:"ready",family,birthRecord:{
