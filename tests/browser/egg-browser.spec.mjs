@@ -24,20 +24,24 @@ for(const device of cases){
   test("all four families automatically hatch after reloading a ready egg",async({page})=>{
    for(const family of ["mossling","glimlet","mistril","pebblin"]){
     await page.goto(base);
-    const seed=({mossling:5,glimlet:12,mistril:17,pebblin:23})[family];
+    const seed=0;
     await page.evaluate(async ({seed,family})=>{
      const {createEgg,applyCare}=await import("/simulation/egg-engine.mjs");
      const actions=["warm","sing","rest","explore","play","story","observe","comfort"];
-     let egg=createEgg(seed);
-     for(let i=0;i<500&&egg.hatch.status==="incubating";i++)egg=applyCare(egg,actions[i%actions.length]);
-     if(egg.hatch.status!=="ready")throw Error("Egg not ready");
+     let egg=null;
+     for(let candidate=seed;candidate<3000;candidate++){
+      let next=createEgg(candidate);
+      for(let i=0;i<500&&next.hatch.status==="incubating";i++)next=applyCare(next,actions[i%actions.length]);
+      if(next.hatch.status==="ready"&&next.hatch.family===family){egg=next;break}
+     }
+     if(!egg)throw Error("No viable egg found for "+family);
      // The UI reveal must reflect the actual family determined by genetics and care.
      localStorage.setItem("project-wisp-egg-preview-v2",JSON.stringify(egg));
     },{seed,family});
     await page.reload();
     await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatched",{timeout:6000});
     const displayed=await page.locator(".scene").getAttribute("data-family");
-    expect(["mossling","glimlet","mistril","pebblin"]).toContain(displayed);
+    expect(displayed).toBe(family);
     await page.reload();
     await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatched");
    }
