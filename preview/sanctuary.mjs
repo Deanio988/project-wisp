@@ -1,10 +1,29 @@
-import {createEgg,applyCare,beginHatch,completeHatch} from "../simulation/egg-engine.mjs";
+import {createEgg,applyCare,beginHatch,completeHatch,migrateLegacy} from "../simulation/egg-engine.mjs";
 import {getJournalView} from "../simulation/egg-journal.mjs";
 const KEY="project-wisp-egg-preview-v2";
+const LEGACY_KEY="project-wisp-v1";
+const MIGRATION_MARKER="project-wisp-egg-preview-migrated-v1";
 const $=id=>document.getElementById(id);
 const randomSeed=()=>{const values=new Uint32Array(1);crypto.getRandomValues(values);return values[0]};
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s?.schemaVersion===2&&s?.hatch&&s?.development)return s}catch{}return createEgg(randomSeed())}
 let state=load();
+function importLegacy(){
+ if(localStorage.getItem(MIGRATION_MARKER))return false;
+ const raw=localStorage.getItem(LEGACY_KEY);
+ if(!raw)return false;
+ try{
+  const old=JSON.parse(raw);
+  if(!old||typeof old!=="object"||Array.isArray(old))return false;
+  const backup=localStorage.getItem(KEY);
+  const migrated=migrateLegacy(old,randomSeed());
+  // Write the new save first; never alter or delete the original legacy save.
+  localStorage.setItem(KEY,JSON.stringify(migrated));
+  localStorage.setItem(MIGRATION_MARKER,"imported");
+  state=migrated;
+  return true;
+ }catch(error){console.warn("Legacy import failed; original save retained",error);return false}
+}
+
 let hatchTimer=null;
 const reduceMotion=()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 function finishHatch(){if(hatchTimer!==null){clearTimeout(hatchTimer);hatchTimer=null}if(state.hatch.status==="hatching"){state=completeHatch(state);render()}}
@@ -40,6 +59,7 @@ function render(){
  progressHatch();
 }
 document.querySelectorAll("[data-care]").forEach(button=>button.addEventListener("click",()=>{state=applyCare(state,button.dataset.care);render()}));
+$("import-legacy").addEventListener("click",()=>{if(confirm("Import a copy of your existing game progress into this preview? Your original save will remain untouched, but this preview egg will be replaced.")){if(!importLegacy())alert("No eligible legacy save found, or it was already imported.");render()}});
 $("skip-hatch").addEventListener("click",finishHatch);
 $("reset").addEventListener("click",()=>{if(confirm("Start a new preview egg?")){if(hatchTimer!==null){clearTimeout(hatchTimer);hatchTimer=null}state=createEgg(randomSeed());render()}});
 render();
