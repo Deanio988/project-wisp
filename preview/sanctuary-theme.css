@@ -32,3 +32,18 @@ body{background:radial-gradient(ellipse at 50% 0%,#284b42 0,#142c29 46%,#0b191b 
 .preview .scene #hatch-fx[hidden]{display:none!important}
 .preview .scene[data-stage="hatching"]:has(#hatch-fx:not([hidden])) #art{visibility:hidden}
 .preview .scene[data-stage="hatching"]:has(#hatch-fx:not([hidden]))::after{display:none}
+
+/* 2.5D presentation: independent ground contact, light volume and varied pose. */
+.preview .scene #creature-depth{position:absolute;inset:0;z-index:0;pointer-events:none}
+.preview .scene #creature-depth::before{content:"";position:absolute;left:50%;bottom:14%;width:clamp(95px,30%,175px);height:22px;border-radius:50%;transform:translateX(-50%);background:#071c23a8;filter:blur(10px);animation:depth-shadow 3.9s ease-in-out infinite}
+.preview .scene #creature-depth::after{content:"";position:absolute;left:50%;top:50%;width:clamp(180px,65%,290px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#d9c8ff40 0,#a4dbdf16 43%,transparent 70%);mix-blend-mode:screen;animation:depth-aura 5.4s ease-in-out infinite}
+.preview .scene[data-family="glimlet"] #creature-depth::after{background:radial-gradient(circle,#fff0b34d 0,#b3a4ed28 40%,transparent 70%)}
+.preview .scene[data-stage="hatched"] #creature-sprite{position:relative;z-index:2;transform-origin:50% 60%;animation:creature-presence 4.4s ease-in-out infinite;filter:drop-shadow(-7px 7px 0 #142d3766) drop-shadow(5px -5px 10px #f4dc9b45)}
+.preview .scene[data-stage="hatched"] #creature-sprite[data-pose="interact"]{animation:creature-curious 1.7s ease-in-out infinite}
+.preview .scene[data-stage="hatched"] #creature-sprite[data-pose="walk"]{animation:creature-turn 1.25s ease-in-out infinite}
+@keyframes creature-presence{0%,100%{transform:translateY(2px) rotate(-1.2deg) scale(1)}35%{transform:translateY(-4px) rotate(1.2deg) scale(1.012)}65%{transform:translateY(-2px) rotate(-.5deg) scale(.994)}}
+@keyframes creature-curious{0%,100%{transform:translateY(-2px) rotate(-3deg) scale(1)}50%{transform:translateY(-5px) rotate(5deg) scale(1.025)}}
+@keyframes creature-turn{0%,100%{transform:translateY(0) scaleX(1) skewY(0deg)}50%{transform:translateY(-3px) scaleX(.94) skewY(1deg)}}
+@keyframes depth-shadow{0%,100%{opacity:.65;transform:translateX(-50%) scale(1)}50%{opacity:.35;transform:translateX(-50%) scale(.85)}}
+@keyframes depth-aura{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(.95)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.preview .scene #creature-depth::before,.preview .scene #creature-depth::after,.preview .scene[data-stage="hatched"] #creature-sprite{animation:none!important}}
