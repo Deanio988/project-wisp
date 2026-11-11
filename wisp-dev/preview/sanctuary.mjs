@@ -1,5 +1,6 @@
 import {createCreaturePlayer} from "./creature-player.mjs";
 import {setEggArtwork} from "./egg-art.mjs";
+import {createHatchEffect} from "./hatch-effect.mjs";
 import {createEgg,applyCare,beginHatch,completeHatch,migrateLegacy} from "../simulation/egg-engine.mjs";
 import {getJournalView} from "../simulation/egg-journal.mjs";
 const KEY="project-wisp-egg-preview-v2";
@@ -12,6 +13,11 @@ let state=load();
 const creaturePlayer=createCreaturePlayer({image:$("creature-sprite"),fallback:$("family-symbol"),reducedMotion:()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches});
 let displayedFamily=null;
 let displayedEggStage=null;
+const hatchCanvas=document.createElement("canvas");
+hatchCanvas.id="hatch-fx";hatchCanvas.hidden=true;hatchCanvas.setAttribute("aria-hidden","true");
+document.querySelector(".scene").append(hatchCanvas);
+const hatchEffect=createHatchEffect(hatchCanvas,{reducedMotion:()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches});
+let previousHatchStatus=null;
 function importLegacy(){
  if(localStorage.getItem(MIGRATION_MARKER))return false;
  const raw=localStorage.getItem(LEGACY_KEY);
@@ -37,6 +43,11 @@ function persist(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){
 function el(tag,text){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node}
 function render(){
  const hatched=state.hatch.status==="hatched";
+ if(previousHatchStatus!==state.hatch.status){
+  if(state.hatch.status==="hatching")void hatchEffect.play();
+  else hatchEffect.stop();
+  previousHatchStatus=state.hatch.status;
+ }
  $("stage").textContent=hatched?"A new beginning":state.stage.charAt(0).toUpperCase()+state.stage.slice(1);
  $("title").textContent=hatched?"Your "+state.hatch.family:"The Little Egg";
  $("story").textContent=hatched?"Your companion has emerged, carrying the memories of its egg days.":state.hatch.status==="ready"||state.hatch.status==="hatching"?"The shell trembles softly. A new life is about to begin.":"The egg responds to your presence. Spend time together and discover its personality.";
