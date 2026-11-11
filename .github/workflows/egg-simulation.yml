@@ -8,6 +8,8 @@ on:
       - 'tests/**'
       - '.github/workflows/egg-simulation.yml'
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   egg-simulation:
     runs-on: ubuntu-latest
@@ -75,3 +77,40 @@ jobs:
           name: project-wisp-development-preview
           path: dist/project-wisp-dev
           if-no-files-found: error
+
+  publish-isolated-preview:
+    needs: egg-simulation
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feature/living-egg-v0.2'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          path: dev
+      - name: Checkout live branch into isolated directory
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: live
+          persist-credentials: true
+      - name: Copy development preview only into separate subdirectory
+        run: |
+          mkdir -p live/wisp-dev
+          rm -rf live/wisp-dev/preview live/wisp-dev/simulation live/wisp-dev/assets
+          cp -r dev/preview dev/simulation dev/assets live/wisp-dev/
+          cp dev/style.css live/wisp-dev/style.css
+          cat > live/wisp-dev/index.html <<'HTML'
+          <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Project Wisp Development Preview</title><meta http-equiv="refresh" content="0;url=./preview/"><p><a href="./preview/">Open the development preview</a></p></html>
+          HTML
+      - name: Commit isolated preview to Pages source branch
+        working-directory: live
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add wisp-dev
+          if git diff --cached --quiet; then
+            echo "Development preview already current"
+          else
+            git commit -m "Publish isolated Wisp development preview (live root unchanged)"
+            git push origin HEAD:main
+          fi
