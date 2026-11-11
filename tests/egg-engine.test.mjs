@@ -1,0 +1,11 @@
+import test from "node:test";import assert from "node:assert/strict";
+import {createEgg,applyCare,getReadiness,beginHatch,completeHatch,migrateLegacy,FAMILIES} from "../simulation/egg-engine.mjs";
+test("seeded genetics reproduce",()=>assert.deepEqual(createEgg(123),createEgg(123)));
+test("different seeds vary",()=>assert.notDeepEqual(createEgg(123).genetics,createEgg(124).genetics));
+test("unknown action fails",()=>assert.throws(()=>applyCare(createEgg(1),"invalid"),RangeError));
+test("input remains immutable",()=>{const s=createEgg(3);applyCare(s,"warm");assert.equal(s.turn,0)});
+test("repetition reduces gains",()=>{let s=createEgg(2);const gains=[];for(let i=0;i<7;i++){const before=s.development.experience;s=applyCare(s,"sing");gains.push(s.development.experience-before)}assert.ok(gains[0]>gains[3]&&gains[3]>gains[6])});
+test("varied care reaches a stable hatch",()=>{let s=createEgg(5);const acts=["warm","sing","rest","explore","play","story","comfort","observe"];for(let i=0;i<400&&s.hatch.status==="incubating";i++)s=applyCare(s,acts[i%acts.length]);assert.equal(s.hatch.status,"ready");assert.ok(FAMILIES.includes(s.hatch.family));assert.ok(getReadiness(s).ready);const family=s.hatch.family;s=completeHatch(beginHatch(s));assert.equal(s.hatch.status,"hatched");assert.equal(s.hatch.family,family);assert.equal(applyCare(s,"warm").hatch.family,family)});
+test("journal entries do not duplicate",()=>{let s=createEgg(7);for(let i=0;i<25;i++)s=applyCare(s,["warm","rest","sing","play"][i%4]);assert.equal(new Set(s.journal.map(e=>e.id)).size,s.journal.length)});
+test("legacy hatched companion remains hatched",()=>{const s=migrateLegacy({hatched:true,traits:{calm:20},warmth:80,trust:70},9);assert.equal(s.hatch.status,"hatched");assert.equal(s.personality.calm,20);assert.equal(s.hatch.birthRecord.legacy,true)});
+test("legacy unhatched does not invent events",()=>{const s=migrateLegacy({warmth:70,trust:30},9);assert.equal(s.events.length,0);assert.equal(s.hatch.status,"incubating")});

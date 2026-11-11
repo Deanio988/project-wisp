@@ -1,0 +1,10 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {createEgg,applyCare,beginHatch,completeHatch} from "../simulation/egg-engine.mjs";
+import {getJournalView,getJournalSummary,JOURNAL_SECTIONS} from "../simulation/egg-journal.mjs";
+test("journal has five ordered sections",()=>assert.deepEqual(getJournalView(createEgg(1)).map(s=>s.section),JOURNAL_SECTIONS));
+test("journal projection does not mutate saved state",()=>{const egg=createEgg(9);const before=JSON.stringify(egg);getJournalView(egg);assert.equal(JSON.stringify(egg),before)});
+test("real care actions produce observations",()=>{let s=createEgg(2);for(let i=0;i<3;i++)s=applyCare(s,"sing");const obs=getJournalView(s).find(x=>x.section==="observations").entries;assert.ok(obs.some(x=>x.id==="activity-sing"));assert.ok(!obs.some(x=>x.id==="activity-play"))});
+test("journal does not expose numeric personality or family identity",()=>{let s=createEgg(3);for(let i=0;i<20;i++)s=applyCare(s,["warm","sing","rest","explore"][i%4]);const output=JSON.stringify(getJournalView(s));assert.ok(!output.includes("affinities"));assert.ok(!output.includes("mossling"));assert.ok(!output.includes("glimlet"));assert.ok(!output.includes("mistril"));assert.ok(!output.includes("pebblin"));assert.ok(!output.includes("score"))});
+test("journal summary is stable on repeated reads",()=>{const s=applyCare(createEgg(4),"warm");assert.deepEqual(getJournalSummary(s),getJournalSummary(s))});
+test("birth entry only appears after hatching",()=>{let s=createEgg(5);const acts=["warm","sing","rest","explore","play","story","comfort","observe"];for(let i=0;i<500&&s.hatch.status==="incubating";i++)s=applyCare(s,acts[i%acts.length]);assert.equal(s.hatch.status,"ready");assert.ok(!JSON.stringify(getJournalView(s)).includes("A new beginning"));s=completeHatch(beginHatch(s));assert.ok(JSON.stringify(getJournalView(s)).includes("A new beginning"))});

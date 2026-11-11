@@ -1,0 +1,177 @@
+name: Egg Simulation Tests
+on:
+  push:
+    branches: [feature/living-egg-v0.2]
+  pull_request:
+    paths:
+      - 'simulation/**'
+      - 'tests/**'
+      - '.github/workflows/egg-simulation.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  egg-simulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install approved artwork from issue 2 (once)
+        run: |
+          if test -f preview/art/creatures/mossling_idle_00.png; then
+            echo "Artwork already installed"
+            exit 0
+          fi
+          curl --fail --location --retry 3 --output /tmp/wisp-artwork.zip 'https://github.com/user-attachments/files/34715218/project_wisp_github_artwork_ready.zip'
+          python3 scripts/install-art.py /tmp/wisp-artwork.zip
+          if [ "$GITHUB_EVENT_NAME" != "push" ]; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview/art/creatures preview/art/eggs
+          git commit -m "Install approved Project Wisp creature and egg artwork from issue 2"
+          git push origin HEAD:feature/living-egg-v0.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate neutral egg-stage artwork
+        run: node scripts/generate-neutral-eggs.mjs
+      - name: Checkout pinned PixelFX effect source
+        uses: actions/checkout@v4
+        with:
+          repository: patch-gg/pixelfx
+          ref: a84159688af3ca37a4be05a0d422b94451b2e24e
+          path: vendor/pixelfx
+      - name: Generate licensed PixelFX hatch sprite sheet
+        run: |
+          (cd vendor/pixelfx && node tools/render.mjs spawn/egg-hatch --sheet --no-actor --out ../../preview/art/effects)
+          cp vendor/pixelfx/LICENSE preview/art/effects/LICENSE
+          test -s preview/art/effects/spawn/egg-hatch/egg-hatch.png
+          test -s preview/art/effects/spawn/egg-hatch/egg-hatch.json
+      - name: Run unit tests and 1000-egg simulation
+        run: node --test tests/*.test.mjs
+      - name: Enforce all 84 artwork files
+        run: node scripts/audit-art.mjs --strict
+      - name: Install Chromium browser test dependencies
+        run: |
+          npm install --no-save @playwright/test
+          npx playwright install --with-deps chromium
+      - name: Start local HTTP server
+        run: python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/wisp-server.log 2>&1 &
+      - name: Run browser acceptance suite
+        run: npx playwright test tests/browser/ --workers=1 --reporter=line
+      - name: Verify mobile preview has no horizontal overflow
+        run: |
+          node --input-type=module <<'JS'
+          import { chromium } from 'playwright';
+          const browser=await chromium.launch({headless:true});
+          for(const width of [320,360,390,412]){
+            const page=await browser.newPage({viewport:{width,height:780},isMobile:true,hasTouch:true});
+            await page.goto('http://127.0.0.1:8765/preview/');
+            await page.locator('[data-care="warm"]').tap();
+            const result=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,buttons:[...document.querySelectorAll('[data-care]')].every(b=>b.getBoundingClientRect().width>=40)}));
+            if(result.overflow||!result.buttons)throw Error('Mobile layout failed at '+width+': '+JSON.stringify(result));
+            await page.close();
+          }
+          await browser.close();
+          JS
+      - name: Capture mobile review screenshot
+        run: |
+          mkdir -p dist/review
+          node --input-type=module <<'JS'
+          import { chromium } from 'playwright';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,hasTouch:true,isMobile:true});
+          await page.goto('http://127.0.0.1:8765/preview/');
+          await page.screenshot({path:'dist/review/mobile-sanctuary.png',fullPage:true});
+          await page.locator('[data-care="warm"]').tap();
+          await page.screenshot({path:'dist/review/mobile-after-care.png',fullPage:true});
+          for(const family of ['glimlet','mossling','mistril','pebblin']){
+            await page.evaluate(async family=>{
+              const {createEgg}=await import('/simulation/egg-engine.mjs');
+              const egg=createEgg(8);
+              egg.hatch.status='hatched';egg.hatch.family=family;
+              localStorage.setItem('project-wisp-egg-preview-v2',JSON.stringify(egg));
+            },family);
+            await page.reload();
+            await page.locator('#creature-sprite').waitFor({state:'visible'});
+            await page.screenshot({path:'dist/review/mobile-'+family+'-hatched.png',fullPage:true});
+          }
+          await browser.close();
+          JS
+      - name: Upload mobile review screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-wisp-mobile-review
+          path: dist/review/*.png
+          if-no-files-found: error
+      - name: Package development preview for review
+        run: |
+          mkdir -p dist/project-wisp-dev
+          cp -r preview simulation assets style.css dist/project-wisp-dev/
+          cat > dist/project-wisp-dev/README.txt <<'TXT'
+          Project Wisp development-only preview.
+          Run a local HTTP server in this folder; index.html is under preview/.
+          This is not a production deployment. Main and the live site are unchanged.
+          TXT
+      - name: Upload development preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-wisp-development-preview
+          path: dist/project-wisp-dev
+          if-no-files-found: error
+
+  publish-isolated-preview:
+    needs: egg-simulation
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feature/living-egg-v0.2')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout development branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/living-egg-v0.2
+          path: dev
+      - name: Install approved artwork into isolated preview checkout
+        run: |
+          if test ! -f dev/preview/art/creatures/mossling_idle_00.png; then
+            curl --fail --location --retry 3 --output /tmp/wisp-artwork.zip 'https://github.com/user-attachments/files/34715218/project_wisp_github_artwork_ready.zip'
+            (cd dev && python3 scripts/install-art.py /tmp/wisp-artwork.zip)
+          fi
+      - name: Generate neutral egg artwork in published preview
+        run: (cd dev && node scripts/generate-neutral-eggs.mjs && node scripts/audit-art.mjs --strict)
+      - name: Checkout PixelFX for isolated preview
+        uses: actions/checkout@v4
+        with:
+          repository: patch-gg/pixelfx
+          ref: a84159688af3ca37a4be05a0d422b94451b2e24e
+          path: vendor/pixelfx
+      - name: Export licensed hatching effect into isolated preview
+        run: |
+          (cd vendor/pixelfx && node tools/render.mjs spawn/egg-hatch --sheet --no-actor --out ../../dev/preview/art/effects)
+          cp vendor/pixelfx/LICENSE dev/preview/art/effects/LICENSE
+          test -s dev/preview/art/effects/spawn/egg-hatch/egg-hatch.png
+      - name: Checkout live branch into isolated directory
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: live
+          persist-credentials: true
+      - name: Copy development preview only into separate subdirectory
+        run: |
+          mkdir -p live/wisp-dev
+          rm -rf live/wisp-dev/preview live/wisp-dev/simulation live/wisp-dev/assets
+          cp -r dev/preview dev/simulation dev/assets live/wisp-dev/
+          cp dev/style.css live/wisp-dev/style.css
+          cat > live/wisp-dev/index.html <<'HTML'
+          <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Project Wisp Development Preview</title><meta http-equiv="refresh" content="0;url=./preview/"><p><a href="./preview/">Open the development preview</a></p></html>
+          HTML
+      - name: Commit isolated preview to Pages source branch
+        working-directory: live
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add wisp-dev
+          if git diff --cached --quiet; then
+            echo "Development preview already current"
+          else
+            git commit -m "Publish isolated Wisp development preview (live root unchanged)"
+            git push origin HEAD:main
+          fi

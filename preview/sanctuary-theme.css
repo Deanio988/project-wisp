@@ -1,0 +1,49 @@
+/* Project Wisp sanctuary art direction v0.6: woodland twilight, crisp native pixel art. */
+:root{color-scheme:dark}
+body{background:radial-gradient(ellipse at 50% 0%,#284b42 0,#142c29 46%,#0b191b 100%);color:#f5eddb}
+.preview{max-width:680px!important;padding:clamp(10px,3vw,24px)!important}
+.preview>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;padding:8px 2px;color:#eadbb3;font-size:clamp(11px,2.4vw,14px);letter-spacing:.13em}
+.preview>header a{font-size:12px!important;letter-spacing:.04em;opacity:.8}
+.preview .scene{isolation:isolate;position:relative;min-height:clamp(300px,80vw,450px)!important;display:grid;place-items:center;overflow:hidden;border:1px solid #87977a;border-radius:26px;background:radial-gradient(ellipse at 50% 48%,#759783 0%,#3c655c 38%,#193b39 78%,#102c2d 100%);box-shadow:inset 0 0 75px #0a292977,0 14px 40px #051a1a66}
+.preview .scene::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at 12% 19%,#fff1b6 0 2px,transparent 3px),radial-gradient(circle at 77% 23%,#d4f4d0 0 2px,transparent 3px),radial-gradient(circle at 85% 69%,#ffdda4 0 2px,transparent 3px),radial-gradient(circle at 24% 76%,#f7edbf 0 1px,transparent 2px),linear-gradient(155deg,transparent 35%,#b5d9a012 45%,transparent 65%);opacity:.9}
+.preview .scene #art,.preview .scene #creature-sprite{position:relative;z-index:1;display:block;flex:none;width:clamp(210px,62vw,306px)!important;height:clamp(210px,62vw,306px)!important;max-height:none!important;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 16px 12px #14262277)}
+.preview .scene #creature-sprite{width:clamp(170px,50vw,252px)!important;height:clamp(170px,50vw,252px)!important;filter:drop-shadow(0 16px 12px #102b2777)}
+.preview .scene [hidden]{display:none!important}
+.preview .scene[data-stage="hatched"]{background:radial-gradient(ellipse at 50% 45%,#829e8b 0,#355e55 52%,#173938 100%)}
+.preview .scene[data-stage="hatched"] #creature-sprite{animation:creature-float 3.6s ease-in-out infinite}
+@keyframes creature-float{0%,100%{transform:translateY(3px)}50%{transform:translateY(-7px)}}
+.preview .scene[data-stage="hatching"] #art{animation:hatch-reveal 3.2s ease-in forwards}
+.preview .panel{background:linear-gradient(165deg,#213c35,#172e2c);border:1px solid #668171;border-radius:24px;padding:clamp(18px,4vw,30px);box-shadow:0 14px 35px #061b1b55;margin-top:20px}
+.preview .panel h1{font-size:clamp(32px,7.8vw,48px);line-height:1.08;letter-spacing:-.025em;margin:12px 0}
+.preview .panel .eyebrow{font-size:11px;letter-spacing:.13em;line-height:1.65;color:#e5d6a6;text-transform:uppercase}
+.preview .panel .egg-stage{font-size:clamp(18px,4.6vw,23px);margin:12px 0;color:#f0ce82}
+.preview .panel #story{font-size:clamp(16px,3.7vw,19px);line-height:1.55;color:#e9e8d7}
+.preview .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0}
+.preview .actions button{min-height:58px;border-radius:15px;background:linear-gradient(160deg,#426757,#345747);border:1px solid #86a28a;color:#f9f1d8;font-size:clamp(15px,3.8vw,19px);transition:background .15s,transform .15s}
+.preview .actions button:active:not(:disabled){transform:scale(.97);background:#63856b}
+.preview .actions button:focus-visible{outline:3px solid #f5d58b;outline-offset:3px}
+.preview .journal{margin-top:28px;border-top:1px solid #668171;padding-top:18px}
+.preview .journal details{background:#19342f;border-color:#547667}
+@media(max-width:390px){.preview .scene{min-height:310px!important}.preview .scene #art{width:245px!important;height:245px!important}.preview .scene #creature-sprite{width:205px!important;height:205px!important}.preview .actions{gap:9px}.preview .actions button{min-height:54px}}
+@media(prefers-reduced-motion:reduce){.preview .scene #art,.preview .scene #creature-sprite,.preview .actions button{animation:none!important;transition:none!important}}
+
+/* PixelFX overlay uses its own egg shell; never double-render the CSS egg. */
+.preview .scene #hatch-fx{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:min(85%,340px);height:auto;aspect-ratio:5/4;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 8px 16px #101b2280)}
+.preview .scene #hatch-fx[hidden]{display:none!important}
+.preview .scene[data-stage="hatching"]:has(#hatch-fx:not([hidden])) #art{visibility:hidden}
+.preview .scene[data-stage="hatching"]:has(#hatch-fx:not([hidden]))::after{display:none}
+
+/* 2.5D presentation: independent ground contact, light volume and varied pose. */
+.preview .scene #creature-depth{position:absolute;inset:0;z-index:0;pointer-events:none}
+.preview .scene #creature-depth::before{content:"";position:absolute;left:50%;bottom:14%;width:clamp(95px,30%,175px);height:22px;border-radius:50%;transform:translateX(-50%);background:#071c23a8;filter:blur(10px);animation:depth-shadow 3.9s ease-in-out infinite}
+.preview .scene #creature-depth::after{content:"";position:absolute;left:50%;top:50%;width:clamp(180px,65%,290px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,#d9c8ff40 0,#a4dbdf16 43%,transparent 70%);mix-blend-mode:screen;animation:depth-aura 5.4s ease-in-out infinite}
+.preview .scene[data-family="glimlet"] #creature-depth::after{background:radial-gradient(circle,#fff0b34d 0,#b3a4ed28 40%,transparent 70%)}
+.preview .scene[data-stage="hatched"] #creature-sprite{position:relative;z-index:2;transform-origin:50% 60%;animation:creature-presence 4.4s ease-in-out infinite;filter:drop-shadow(-7px 7px 0 #142d3766) drop-shadow(5px -5px 10px #f4dc9b45)}
+.preview .scene[data-stage="hatched"] #creature-sprite[data-pose="interact"]{animation:creature-curious 1.7s ease-in-out infinite}
+.preview .scene[data-stage="hatched"] #creature-sprite[data-pose="walk"]{animation:creature-turn 1.25s ease-in-out infinite}
+@keyframes creature-presence{0%,100%{transform:translateY(2px) rotate(-1.2deg) scale(1)}35%{transform:translateY(-4px) rotate(1.2deg) scale(1.012)}65%{transform:translateY(-2px) rotate(-.5deg) scale(.994)}}
+@keyframes creature-curious{0%,100%{transform:translateY(-2px) rotate(-3deg) scale(1)}50%{transform:translateY(-5px) rotate(5deg) scale(1.025)}}
+@keyframes creature-turn{0%,100%{transform:translateY(0) scaleX(1) skewY(0deg)}50%{transform:translateY(-3px) scaleX(.94) skewY(1deg)}}
+@keyframes depth-shadow{0%,100%{opacity:.65;transform:translateX(-50%) scale(1)}50%{opacity:.35;transform:translateX(-50%) scale(.85)}}
+@keyframes depth-aura{0%,100%{opacity:.7;transform:translate(-50%,-50%) scale(.95)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.preview .scene #creature-depth::before,.preview .scene #creature-depth::after,.preview .scene[data-stage="hatched"] #creature-sprite{animation:none!important}}
