@@ -11,6 +11,7 @@ function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s?.schemaVe
 let state=load();
 const creaturePlayer=createCreaturePlayer({image:$("creature-sprite"),fallback:$("family-symbol"),reducedMotion:()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches});
 let displayedFamily=null;
+let displayedEggStage=null;
 function importLegacy(){
  if(localStorage.getItem(MIGRATION_MARKER))return false;
  const raw=localStorage.getItem(LEGACY_KEY);
@@ -42,18 +43,18 @@ function render(){
  const stageVisual=hatched?"hatched":state.hatch.status==="hatching"?"hatching":state.stage;
  document.querySelector(".scene").dataset.stage=stageVisual;
  document.querySelector(".scene").dataset.family=hatched?state.hatch.family:"";
- const dedicatedArt=hatched&&state.hatch.family==="mossling";
+
  if(hatched&&displayedFamily!==state.hatch.family){displayedFamily=state.hatch.family;creaturePlayer.play(state.hatch.family)}
- if(!hatched&&displayedFamily!==null){creaturePlayer.dispose();displayedFamily=null;$("creature-sprite").hidden=true}
- $("art").hidden=hatched&&!dedicatedArt;
- if(hatched){$("art").dataset.eggStage="hatched";$("art").src=dedicatedArt?"../assets/mossling.svg":"../assets/living-egg.svg"}
- else setEggArtwork($("art"),state.stage);
- $("family-symbol").hidden=!hatched||dedicatedArt;
+ if(!hatched&&displayedFamily!==null){creaturePlayer.dispose();displayedFamily=null;$("creature-sprite").hidden=true;$("family-symbol").hidden=true}
+ $("art").hidden=hatched;
+ if(hatched){displayedEggStage=null;$("art").dataset.eggStage="hatched"}
+ else if(displayedEggStage!==state.stage){displayedEggStage=state.stage;setEggArtwork($("art"),state.stage)}
+ if(!hatched)$("family-symbol").hidden=true;
  $("family-symbol").textContent=hatched?({glimlet:"✦",mistril:"☁",pebblin:"◆"}[state.hatch.family]||"✧"):"";
  $("art").alt=hatched?"A newly hatched companion":"An illustrated magical egg";
  document.querySelectorAll("[data-care]").forEach(b=>b.disabled=state.hatch.status!=="incubating");
  $("hatch-notice").hidden=!(state.hatch.status==="ready"||state.hatch.status==="hatching");
- $("hatch-notice").textContent="The egg is hatching naturally…";
+ $("hatch-notice").textContent="The shell glows, trembles and opens…";
  $("skip-hatch").hidden=state.hatch.status!=="hatching"||reduceMotion();
  const journal=$("journal");journal.replaceChildren();
  for(const section of getJournalView(state)){
