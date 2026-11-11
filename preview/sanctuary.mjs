@@ -46,7 +46,7 @@ function render(){
  if(hatched&&displayedFamily!==state.hatch.family){displayedFamily=state.hatch.family;creaturePlayer.play(state.hatch.family)}
  if(!hatched&&displayedFamily!==null){creaturePlayer.dispose();displayedFamily=null;$("creature-sprite").hidden=true}
  $("art").hidden=hatched&&!dedicatedArt;
- if(hatched){$("art").src=dedicatedArt?"../assets/mossling.svg":"../assets/living-egg.svg"}
+ if(hatched){$("art").dataset.eggStage="hatched";$("art").src=dedicatedArt?"../assets/mossling.svg":"../assets/living-egg.svg"}
  else setEggArtwork($("art"),state.stage);
  $("family-symbol").hidden=!hatched||dedicatedArt;
  $("family-symbol").textContent=hatched?({glimlet:"✦",mistril:"☁",pebblin:"◆"}[state.hatch.family]||"✧"):"";
