@@ -84,3 +84,24 @@ test("sanctuary theme renders pixel-crisp artwork and accessible controls",async
  expect(controls.every(h=>h>=48)).toBe(true);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
+
+test("egg stage transitions never flash old SVG",async({page})=>{
+ await page.goto(base);
+ await expect.poll(()=>page.locator("#art").evaluate(i=>i.naturalWidth)).toBe(96);
+ await page.evaluate(()=>{
+  window.__eggSources=[];
+  new MutationObserver(()=>window.__eggSources.push(document.querySelector("#art").getAttribute("src"))).observe(document.querySelector("#art"),{attributes:true,attributeFilter:["src"]});
+ });
+ for(let i=0;i<40;i++)await page.locator('[data-care="warm"]').click().catch(()=>{});
+ const sources=await page.evaluate(()=>window.__eggSources);
+ expect(sources).not.toContain("../assets/living-egg.svg");
+});
+test("PixelFX exported metadata and transparent sheet are available",async({page})=>{
+ await page.goto(base);
+ const data=await page.request.get("/preview/art/effects/spawn/egg-hatch/egg-hatch.json");
+ expect(data.ok()).toBe(true);
+ const json=await data.json();
+ expect(json.frames.length).toBeGreaterThan(60);
+ const sheet=await page.request.get("/preview/art/effects/spawn/egg-hatch/egg-hatch.png");
+ expect(sheet.ok()).toBe(true);
+});
