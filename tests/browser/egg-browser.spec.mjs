@@ -105,3 +105,19 @@ test("legacy import cancellation leaves both saves unchanged",async({page})=>{
  await page.locator("#import-legacy").click();
  expect(await page.evaluate(()=>localStorage.getItem("project-wisp-egg-preview-v2"))).toBe(before);
 });
+
+test("optional creature sprites fall back without broken images or save mutation",async({page})=>{
+ await page.goto(base);
+ await page.evaluate(async()=>{
+  const {createEgg,applyCare,beginHatch,completeHatch}=await import("/simulation/egg-engine.mjs");
+  let egg=createEgg(11);const actions=["warm","sing","rest","explore","play","story","observe","comfort"];
+  for(let i=0;i<500&&egg.hatch.status==="incubating";i++)egg=applyCare(egg,actions[i%actions.length]);
+  if(egg.hatch.status!=="ready")throw Error("Test egg not ready");
+  egg=completeHatch(beginHatch(egg));
+  localStorage.setItem("project-wisp-egg-preview-v2",JSON.stringify(egg));
+ });
+ await page.reload();
+ await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatched");
+ await expect(page.locator("#creature-sprite")).toBeHidden({timeout:3000});
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("project-wisp-egg-preview-v2")).hatch.status)).toBe("hatched");
+});
