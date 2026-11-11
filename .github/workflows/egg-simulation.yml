@@ -84,6 +84,17 @@ jobs:
           await page.screenshot({path:'dist/review/mobile-sanctuary.png',fullPage:true});
           await page.locator('[data-care="warm"]').tap();
           await page.screenshot({path:'dist/review/mobile-after-care.png',fullPage:true});
+          for(const family of ['glimlet','mossling','mistril','pebblin']){
+            await page.evaluate(async family=>{
+              const {createEgg}=await import('/simulation/egg-engine.mjs');
+              const egg=createEgg(8);
+              egg.hatch.status='hatched';egg.hatch.family=family;
+              localStorage.setItem('project-wisp-egg-preview-v2',JSON.stringify(egg));
+            },family);
+            await page.reload();
+            await page.locator('#creature-sprite').waitFor({state:'visible'});
+            await page.screenshot({path:'dist/review/mobile-'+family+'-hatched.png',fullPage:true});
+          }
           await browser.close();
           JS
       - name: Upload mobile review screenshots
