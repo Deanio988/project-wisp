@@ -41,6 +41,25 @@ jobs:
           }
           await browser.close();
           JS
+      - name: Capture mobile review screenshot
+        run: |
+          mkdir -p dist/review
+          node --input-type=module <<'JS'
+          import { chromium } from 'playwright';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,hasTouch:true,isMobile:true});
+          await page.goto('http://127.0.0.1:8765/preview/');
+          await page.screenshot({path:'dist/review/mobile-sanctuary.png',fullPage:true});
+          await page.locator('[data-care="warm"]').tap();
+          await page.screenshot({path:'dist/review/mobile-after-care.png',fullPage:true});
+          await browser.close();
+          JS
+      - name: Upload mobile review screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-wisp-mobile-review
+          path: dist/review/*.png
+          if-no-files-found: error
       - name: Package development preview for review
         run: |
           mkdir -p dist/project-wisp-dev
