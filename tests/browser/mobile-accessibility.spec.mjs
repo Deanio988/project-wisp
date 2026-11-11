@@ -35,3 +35,19 @@ test("preview clearly identifies pending artwork and keeps header in viewport",a
  expect(header.x).toBeGreaterThanOrEqual(0);
  expect(header.x+header.width).toBeLessThanOrEqual(321);
 });
+
+test("four neutral egg-stage assets load at their intended dimensions",async({page})=>{
+ await page.goto("http://127.0.0.1:8765/preview/");
+ for(const stage of ["dormant","awakening","forming","emergence"]){
+  const result=await page.evaluate(async stage=>{
+   const {eggArtPath}=await import("/preview/egg-art.mjs");
+   const img=new Image();img.src=eggArtPath(stage);
+   await img.decode();
+   return {width:img.naturalWidth,height:img.naturalHeight,src:img.src};
+  },stage);
+  expect(result.width).toBe(96);
+  expect(result.height).toBe(96);
+  expect(result.src).toContain("neutral_egg_"+stage+".png");
+  expect(result.src).not.toMatch(/mossling|glimlet|mistril|pebblin/);
+ }
+});
