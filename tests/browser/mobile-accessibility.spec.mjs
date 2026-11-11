@@ -29,7 +29,7 @@ test("mobile entry redirects into the real sanctuary without an iframe",async({p
 test("preview clearly identifies pending artwork and keeps header in viewport",async({page})=>{
  await page.setViewportSize({width:320,height:700});
  await page.goto("http://127.0.0.1:8765/preview/");
- await expect(page.getByText(/Pixel artwork pending/)).toBeVisible();
+ await expect(page.getByText(/Pixel artwork installed/)).toBeVisible();
  const header=await page.locator("header").boundingBox();
  expect(header).not.toBeNull();
  expect(header.x).toBeGreaterThanOrEqual(0);
