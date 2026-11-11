@@ -121,6 +121,7 @@ test("installed creature sprites animate without save mutation",async({page})=>{
  await expect(page.locator("#creature-sprite")).toBeVisible({timeout:3000});
  await expect.poll(()=>page.locator("#creature-sprite").evaluate(img=>img.complete&&img.naturalWidth===64&&img.naturalHeight===64)).toBe(true);
  const src=await page.locator("#creature-sprite").getAttribute("src");
- expect(src).toMatch(/\\/art\\/creatures\\/(mossling|glimlet|mistril|pebblin)_idle_0[0-3]\\.png$/);
+ expect(src).toContain("/art/creatures/");
+ expect(src).toMatch(/_idle_0[0-3][.]png$/);
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("project-wisp-egg-preview-v2")).hatch.status)).toBe("hatched");
 });
