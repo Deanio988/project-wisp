@@ -20,7 +20,7 @@ def main(path):
   validated={}
   for name,(width,height) in EXPECTED.items():
    data=archive.read(name)
-   if len(data)<26 or data[:8]!=b'\\x89PNG\\r\\n\\x1a\\n' or data[12:16]!=b'IHDR' or struct.unpack('>II',data[16:24])!=(width,height) or data[25]!=6:
+   if len(data)<26 or data[:8]!=bytes((137,80,78,71,13,10,26,10)) or data[12:16]!=b'IHDR' or struct.unpack('>II',data[16:24])!=(width,height) or data[25]!=6:
     raise SystemExit('Invalid RGBA PNG: '+name)
    validated[name]=data
   for name,data in validated.items():
