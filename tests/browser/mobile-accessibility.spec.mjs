@@ -105,3 +105,20 @@ test("PixelFX exported metadata and transparent sheet are available",async({page
  const sheet=await page.request.get(base+"art/effects/spawn/egg-hatch/egg-hatch.png");
  expect(sheet.ok()).toBe(true);
 });
+
+test("hatched Glimlet has a depth layer and expressive sprite actions",async({page})=>{
+ await page.goto(base);
+ await page.evaluate(async()=>{
+  const {createEgg,applyCare}=await import("/simulation/egg-engine.mjs");
+  let egg=createEgg(8);const actions=["warm","sing","rest","explore","play","story","observe","comfort"];
+  for(let i=0;i<500&&egg.hatch.status==="incubating";i++)egg=applyCare(egg,actions[i%actions.length]);
+  egg.hatch.status="hatched";egg.hatch.family="glimlet";
+  localStorage.setItem("project-wisp-egg-preview-v2",JSON.stringify(egg));
+ });
+ await page.reload();
+ await expect(page.locator("#creature-depth")).toBeVisible();
+ await expect(page.locator("#creature-sprite")).toBeVisible();
+ const rendering=await page.locator("#creature-sprite").evaluate(el=>({animation:getComputedStyle(el).animationName,pixel:getComputedStyle(el).imageRendering}));
+ expect(rendering.animation).toContain("creature-presence");
+ expect(["pixelated","crisp-edges"]).toContain(rendering.pixel);
+});
