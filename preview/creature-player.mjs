@@ -16,7 +16,7 @@ export function createCreaturePlayer({image,fallback,onStatus=()=>{},reducedMoti
   const path=spritePath(family,action,frame);
   const probe=new Image();
   probe.onload=()=>{if(request!==token)return;image.src=path;image.alt=family+" "+action+" animation";image.hidden=false;fallback.hidden=true;onStatus("sprite")};
-  probe.onerror=()=>{if(request===token)showFallback()};
+  probe.onerror=()=>{if(request===token){stop();showFallback()}};
   probe.src=path;
  };
  function play(nextFamily,nextAction="idle"){
