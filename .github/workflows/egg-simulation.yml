@@ -20,6 +20,8 @@ jobs:
           node-version: '22'
       - name: Run unit tests and 1000-egg simulation
         run: node --test tests/*.test.mjs
+      - name: Report production artwork readiness (informational)
+        run: node scripts/audit-art.mjs
       - name: Install Chromium browser test dependencies
         run: |
           npm install --no-save @playwright/test
