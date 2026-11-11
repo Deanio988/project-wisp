@@ -1,4 +1,5 @@
 import {createCreaturePlayer} from "./creature-player.mjs";
+import {setEggArtwork} from "./egg-art.mjs";
 import {createEgg,applyCare,beginHatch,completeHatch,migrateLegacy} from "../simulation/egg-engine.mjs";
 import {getJournalView} from "../simulation/egg-journal.mjs";
 const KEY="project-wisp-egg-preview-v2";
@@ -45,7 +46,8 @@ function render(){
  if(hatched&&displayedFamily!==state.hatch.family){displayedFamily=state.hatch.family;creaturePlayer.play(state.hatch.family)}
  if(!hatched&&displayedFamily!==null){creaturePlayer.dispose();displayedFamily=null;$("creature-sprite").hidden=true}
  $("art").hidden=hatched&&!dedicatedArt;
- $("art").src=dedicatedArt?"../assets/mossling.svg":"../assets/living-egg.svg";
+ if(hatched){$("art").src=dedicatedArt?"../assets/mossling.svg":"../assets/living-egg.svg"}
+ else setEggArtwork($("art"),state.stage);
  $("family-symbol").hidden=!hatched||dedicatedArt;
  $("family-symbol").textContent=hatched?({glimlet:"✦",mistril:"☁",pebblin:"◆"}[state.hatch.family]||"✧"):"";
  $("art").alt=hatched?"A newly hatched companion":"An illustrated magical egg";
