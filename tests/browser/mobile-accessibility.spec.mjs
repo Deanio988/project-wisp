@@ -25,3 +25,13 @@ test("mobile entry redirects into the real sanctuary without an iframe",async({p
  await expect(page.locator("[data-care]")).toHaveCount(8);
  await expect(page.locator("iframe")).toHaveCount(0);
 });
+
+test("preview clearly identifies pending artwork and keeps header in viewport",async({page})=>{
+ await page.setViewportSize({width:320,height:700});
+ await page.goto("http://127.0.0.1:8765/preview/");
+ await expect(page.getByText(/Pixel artwork pending/)).toBeVisible();
+ const header=await page.locator("header").boundingBox();
+ expect(header).not.toBeNull();
+ expect(header.x).toBeGreaterThanOrEqual(0);
+ expect(header.x+header.width).toBeLessThanOrEqual(321);
+});
