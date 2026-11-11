@@ -11,7 +11,9 @@ test("preview contains all accessible core controls",()=>{
 });
 test("preview uses isolated save and does not touch live save key",()=>{
  assert.ok(js.includes("project-wisp-egg-preview-v2"));
- assert.ok(!js.includes("project-wisp-v1"));
+ assert.ok(js.includes('const LEGACY_KEY="project-wisp-v1"'));
+ assert.ok(js.includes("localStorage.getItem(LEGACY_KEY)"));
+ assert.ok(!/localStorage\\.(?:setItem|removeItem)\\(LEGACY_KEY/.test(js));
 });
 test("preview imports the shared engine and journal",()=>{
  assert.ok(js.includes('from "../simulation/egg-engine.mjs"'));
