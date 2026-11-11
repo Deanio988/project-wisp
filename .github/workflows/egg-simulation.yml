@@ -16,7 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install approved artwork from issue 2 (once)
-        if: github.event_name == 'push'
         run: |
           if test -f preview/art/creatures/mossling_idle_00.png; then
             echo "Artwork already installed"
@@ -24,6 +23,7 @@ jobs:
           fi
           curl --fail --location --retry 3 --output /tmp/wisp-artwork.zip 'https://github.com/user-attachments/files/34715218/project_wisp_github_artwork_ready.zip'
           python3 scripts/install-art.py /tmp/wisp-artwork.zip
+          if [ "$GITHUB_EVENT_NAME" != "push" ]; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add preview/art/creatures preview/art/eggs
@@ -104,6 +104,12 @@ jobs:
         with:
           ref: feature/living-egg-v0.2
           path: dev
+      - name: Install approved artwork into isolated preview checkout
+        run: |
+          if test ! -f dev/preview/art/creatures/mossling_idle_00.png; then
+            curl --fail --location --retry 3 --output /tmp/wisp-artwork.zip 'https://github.com/user-attachments/files/34715218/project_wisp_github_artwork_ready.zip'
+            (cd dev && python3 scripts/install-art.py /tmp/wisp-artwork.zip)
+          fi
       - name: Checkout live branch into isolated directory
         uses: actions/checkout@v4
         with:
