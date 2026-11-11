@@ -6,6 +6,7 @@ for(const family of CREATURE_FAMILIES){
  for(const action of CREATURE_ACTIONS)for(let frame=0;frame<4;frame++)assets.push({type:'creature',path:new URL(spritePath(family,action,frame),new URL('../preview/',import.meta.url)),width:64,height:64});
  for(const stage of stages)assets.push({type:'egg',path:new URL('../preview/art/eggs/'+family+'_egg_'+stage+'.png',import.meta.url),width:96,height:96});
 }
+for(const stage of stages)assets.push({type:'neutral-egg',path:new URL('../preview/art/eggs/neutral_egg_'+stage+'.png',import.meta.url),width:96,height:96});
 let present=0,invalid=0;
 for(const asset of assets){
  if(!existsSync(asset.path))continue;
