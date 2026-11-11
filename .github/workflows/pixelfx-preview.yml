@@ -1,0 +1,34 @@
+name: Prepare PixelFX hatching art
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export-hatch-effect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Wisp
+        uses: actions/checkout@v4
+      - name: Checkout pinned PixelFX source
+        uses: actions/checkout@v4
+        with:
+          repository: patch-gg/pixelfx
+          ref: a8415968
+          path: vendor/pixelfx
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Export egg-hatch transparent spritesheet
+        working-directory: vendor/pixelfx
+        run: node tools/render.mjs spawn/egg-hatch --sheet --no-actor --out ../../dist/pixelfx
+      - name: Copy required attribution
+        run: |
+          cp vendor/pixelfx/LICENSE dist/pixelfx/LICENSE
+          cp vendor/pixelfx/NOTICE.md dist/pixelfx/NOTICE.md
+      - name: Upload preview assets for visual review
+        uses: actions/upload-artifact@v4
+        with:
+          name: wisp-pixelfx-hatching-preview
+          path: dist/pixelfx
+          if-no-files-found: error
