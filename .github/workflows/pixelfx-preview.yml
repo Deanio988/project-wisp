@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: patch-gg/pixelfx
-          ref: a8415968
+          ref: a84159688af3ca37a4be05a0d422b94451b2e24e
           path: vendor/pixelfx
       - name: Install Node
         uses: actions/setup-node@v4
@@ -33,7 +33,7 @@ jobs:
       - name: Copy required attribution
         run: |
           cp vendor/pixelfx/LICENSE dist/pixelfx/LICENSE
-          cp vendor/pixelfx/NOTICE.md dist/pixelfx/NOTICE.md
+          if test -f vendor/pixelfx/NOTICE.md; then cp vendor/pixelfx/NOTICE.md dist/pixelfx/NOTICE.md; fi
       - name: Upload preview assets for visual review
         uses: actions/upload-artifact@v4
         with:
