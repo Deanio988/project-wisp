@@ -1,5 +1,6 @@
 import {test,expect} from "@playwright/test";
 const base="http://127.0.0.1:8765/preview/";
+test.use({hasTouch:true});
 test("mobile sanctuary works with touch and screen reader labels",async({page})=>{
  await page.setViewportSize({width:360,height:780});
  await page.goto(base);
