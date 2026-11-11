@@ -73,3 +73,14 @@ test("care does not reset egg image and hatching visibly animates",async({page})
  await expect(page.locator("#art")).toBeHidden();
  await expect(page.locator("#creature-sprite")).toBeVisible();
 });
+
+test("sanctuary theme renders pixel-crisp artwork and accessible controls",async({page})=>{
+ await page.setViewportSize({width:360,height:780});
+ await page.goto("http://127.0.0.1:8765/preview/");
+ const style=await page.locator("#art").evaluate(el=>({pixel:getComputedStyle(el).imageRendering,width:el.getBoundingClientRect().width}));
+ expect(["pixelated","crisp-edges"]).toContain(style.pixel);
+ expect(style.width).toBeLessThanOrEqual(306);
+ const controls=await page.locator("[data-care]").evaluateAll(els=>els.map(e=>e.getBoundingClientRect().height));
+ expect(controls.every(h=>h>=48)).toBe(true);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
