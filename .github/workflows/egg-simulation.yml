@@ -32,10 +32,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Generate neutral egg-stage artwork
+        run: node scripts/generate-neutral-eggs.mjs
       - name: Run unit tests and 1000-egg simulation
         run: node --test tests/*.test.mjs
-      - name: Report production artwork readiness (informational)
-        run: node scripts/audit-art.mjs
+      - name: Enforce all 84 artwork files
+        run: node scripts/audit-art.mjs --strict
       - name: Install Chromium browser test dependencies
         run: |
           npm install --no-save @playwright/test
@@ -110,6 +112,8 @@ jobs:
             curl --fail --location --retry 3 --output /tmp/wisp-artwork.zip 'https://github.com/user-attachments/files/34715218/project_wisp_github_artwork_ready.zip'
             (cd dev && python3 scripts/install-art.py /tmp/wisp-artwork.zip)
           fi
+      - name: Generate neutral egg artwork in published preview
+        run: (cd dev && node scripts/generate-neutral-eggs.mjs && node scripts/audit-art.mjs --strict)
       - name: Checkout live branch into isolated directory
         uses: actions/checkout@v4
         with:
