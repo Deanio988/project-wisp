@@ -51,3 +51,25 @@ test("four neutral egg-stage assets load at their intended dimensions",async({pa
   expect(result.src).not.toMatch(/mossling|glimlet|mistril|pebblin/);
  }
 });
+
+test("care does not reset egg image and hatching visibly animates",async({page})=>{
+ await page.goto("http://127.0.0.1:8765/preview/");
+ await expect.poll(()=>page.locator("#art").evaluate(i=>i.complete&&i.naturalWidth===96)).toBe(true);
+ const before=await page.locator("#art").getAttribute("src");
+ await page.locator('[data-care="warm"]').click();
+ const after=await page.locator("#art").getAttribute("src");
+ if(await page.locator("#stage").innerText()==="Dormant")expect(after).toBe(before);
+ await page.evaluate(async()=>{
+  const {createEgg,applyCare}=await import("/simulation/egg-engine.mjs");
+  let egg=createEgg(8);const actions=["warm","sing","rest","explore","play","story","observe","comfort"];
+  for(let i=0;i<500&&egg.hatch.status==="incubating";i++)egg=applyCare(egg,actions[i%actions.length]);
+  localStorage.setItem("project-wisp-egg-preview-v2",JSON.stringify(egg));
+ });
+ await page.reload();
+ await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatching",{timeout:1500});
+ const anim=await page.locator("#art").evaluate(el=>getComputedStyle(el).animationName);
+ expect(anim).toContain("hatch-reveal");
+ await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatched",{timeout:6000});
+ await expect(page.locator("#art")).toBeHidden();
+ await expect(page.locator("#creature-sprite")).toBeVisible();
+});
