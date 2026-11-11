@@ -26,3 +26,9 @@ body{background:radial-gradient(ellipse at 50% 0%,#284b42 0,#142c29 46%,#0b191b 
 .preview .journal details{background:#19342f;border-color:#547667}
 @media(max-width:390px){.preview .scene{min-height:310px!important}.preview .scene #art{width:245px!important;height:245px!important}.preview .scene #creature-sprite{width:205px!important;height:205px!important}.preview .actions{gap:9px}.preview .actions button{min-height:54px}}
 @media(prefers-reduced-motion:reduce){.preview .scene #art,.preview .scene #creature-sprite,.preview .actions button{animation:none!important;transition:none!important}}
+
+/* PixelFX overlay uses its own egg shell; never double-render the CSS egg. */
+.preview .scene #hatch-fx{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:min(85%,340px);height:auto;aspect-ratio:5/4;image-rendering:pixelated;pointer-events:none;filter:drop-shadow(0 8px 16px #101b2280)}
+.preview .scene #hatch-fx[hidden]{display:none!important}
+.preview .scene[data-stage="hatching"]:has(#hatch-fx:not([hidden])) #art{visibility:hidden}
+.preview .scene[data-stage="hatching"]:has(#hatch-fx:not([hidden]))::after{display:none}
