@@ -34,6 +34,18 @@ jobs:
           node-version: '22'
       - name: Generate neutral egg-stage artwork
         run: node scripts/generate-neutral-eggs.mjs
+      - name: Checkout pinned PixelFX effect source
+        uses: actions/checkout@v4
+        with:
+          repository: patch-gg/pixelfx
+          ref: a84159688af3ca37a4be05a0d422b94451b2e24e
+          path: vendor/pixelfx
+      - name: Generate licensed PixelFX hatch sprite sheet
+        run: |
+          (cd vendor/pixelfx && node tools/render.mjs spawn/egg-hatch --sheet --no-actor --out ../../preview/art/effects)
+          cp vendor/pixelfx/LICENSE preview/art/effects/LICENSE
+          test -s preview/art/effects/spawn/egg-hatch/egg-hatch.png
+          test -s preview/art/effects/spawn/egg-hatch/egg-hatch.json
       - name: Run unit tests and 1000-egg simulation
         run: node --test tests/*.test.mjs
       - name: Enforce all 84 artwork files
@@ -114,6 +126,17 @@ jobs:
           fi
       - name: Generate neutral egg artwork in published preview
         run: (cd dev && node scripts/generate-neutral-eggs.mjs && node scripts/audit-art.mjs --strict)
+      - name: Checkout PixelFX for isolated preview
+        uses: actions/checkout@v4
+        with:
+          repository: patch-gg/pixelfx
+          ref: a84159688af3ca37a4be05a0d422b94451b2e24e
+          path: vendor/pixelfx
+      - name: Export licensed hatching effect into isolated preview
+        run: |
+          (cd vendor/pixelfx && node tools/render.mjs spawn/egg-hatch --sheet --no-actor --out ../../dev/preview/art/effects)
+          cp vendor/pixelfx/LICENSE dev/preview/art/effects/LICENSE
+          test -s dev/preview/art/effects/spawn/egg-hatch/egg-hatch.png
       - name: Checkout live branch into isolated directory
         uses: actions/checkout@v4
         with:
