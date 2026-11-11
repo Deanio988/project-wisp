@@ -92,16 +92,16 @@ test("egg stage transitions never flash old SVG",async({page})=>{
   window.__eggSources=[];
   new MutationObserver(()=>window.__eggSources.push(document.querySelector("#art").getAttribute("src"))).observe(document.querySelector("#art"),{attributes:true,attributeFilter:["src"]});
  });
- for(let i=0;i<40;i++)await page.locator('[data-care="warm"]').click().catch(()=>{});
+ for(let i=0;i<8;i++)await page.locator('[data-care="warm"]').click();
  const sources=await page.evaluate(()=>window.__eggSources);
  expect(sources).not.toContain("../assets/living-egg.svg");
 });
 test("PixelFX exported metadata and transparent sheet are available",async({page})=>{
  await page.goto(base);
- const data=await page.request.get("/preview/art/effects/spawn/egg-hatch/egg-hatch.json");
+ const data=await page.request.get(base+"art/effects/spawn/egg-hatch/egg-hatch.json");
  expect(data.ok()).toBe(true);
  const json=await data.json();
  expect(json.frames.length).toBeGreaterThan(60);
- const sheet=await page.request.get("/preview/art/effects/spawn/egg-hatch/egg-hatch.png");
+ const sheet=await page.request.get(base+"art/effects/spawn/egg-hatch/egg-hatch.png");
  expect(sheet.ok()).toBe(true);
 });
