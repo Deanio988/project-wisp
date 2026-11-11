@@ -21,3 +21,14 @@ test('any installed creature frames are nonempty; missing artwork remains option
  console.log('Creature frames installed: '+installed+'/64; remaining: '+(64-installed));
  assert.ok(installed===0||installed===64,'Partial artwork installation: complete all 64 frames together');
 });
+
+test('egg artwork installation is all-or-nothing across four families and stages',()=>{
+ const stages=['dormant','awakening','forming','emergence'];
+ let installed=0;
+ for(const family of CREATURE_FAMILIES)for(const stage of stages){
+  const url=new URL('../preview/art/eggs/'+family+'_egg_'+stage+'.png',import.meta.url);
+  if(existsSync(url)){assert.ok(statSync(url).size>100,'Empty egg art: '+url);installed++}
+ }
+ console.log('Egg frames installed: '+installed+'/16; remaining: '+(16-installed));
+ assert.ok(installed===0||installed===16,'Partial egg art installation: complete all 16 frames together');
+});
