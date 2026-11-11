@@ -1,3 +1,4 @@
+import {createCreaturePlayer} from "./creature-player.mjs";
 import {createEgg,applyCare,beginHatch,completeHatch,migrateLegacy} from "../simulation/egg-engine.mjs";
 import {getJournalView} from "../simulation/egg-journal.mjs";
 const KEY="project-wisp-egg-preview-v2";
@@ -7,6 +8,8 @@ const $=id=>document.getElementById(id);
 const randomSeed=()=>{const values=new Uint32Array(1);crypto.getRandomValues(values);return values[0]};
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s?.schemaVersion===2&&s?.hatch&&s?.development)return s}catch{}return createEgg(randomSeed())}
 let state=load();
+const creaturePlayer=createCreaturePlayer({image:$("creature-sprite"),fallback:$("family-symbol"),reducedMotion:()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches});
+let displayedFamily=null;
 function importLegacy(){
  if(localStorage.getItem(MIGRATION_MARKER))return false;
  const raw=localStorage.getItem(LEGACY_KEY);
@@ -39,6 +42,8 @@ function render(){
  document.querySelector(".scene").dataset.stage=stageVisual;
  document.querySelector(".scene").dataset.family=hatched?state.hatch.family:"";
  const dedicatedArt=hatched&&state.hatch.family==="mossling";
+ if(hatched&&displayedFamily!==state.hatch.family){displayedFamily=state.hatch.family;creaturePlayer.play(state.hatch.family)}
+ if(!hatched&&displayedFamily!==null){creaturePlayer.dispose();displayedFamily=null;$("creature-sprite").hidden=true}
  $("art").hidden=hatched&&!dedicatedArt;
  $("art").src=dedicatedArt?"../assets/mossling.svg":"../assets/living-egg.svg";
  $("family-symbol").hidden=!hatched||dedicatedArt;
