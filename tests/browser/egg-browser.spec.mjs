@@ -106,7 +106,7 @@ test("legacy import cancellation leaves both saves unchanged",async({page})=>{
  expect(await page.evaluate(()=>localStorage.getItem("project-wisp-egg-preview-v2"))).toBe(before);
 });
 
-test("optional creature sprites fall back without broken images or save mutation",async({page})=>{
+test("installed creature sprites animate without save mutation",async({page})=>{
  await page.goto(base);
  await page.evaluate(async()=>{
   const {createEgg,applyCare,beginHatch,completeHatch}=await import("/simulation/egg-engine.mjs");
@@ -118,6 +118,9 @@ test("optional creature sprites fall back without broken images or save mutation
  });
  await page.reload();
  await expect(page.locator(".scene")).toHaveAttribute("data-stage","hatched");
- await expect(page.locator("#creature-sprite")).toBeHidden({timeout:3000});
+ await expect(page.locator("#creature-sprite")).toBeVisible({timeout:3000});
+ await expect.poll(()=>page.locator("#creature-sprite").evaluate(img=>img.complete&&img.naturalWidth===64&&img.naturalHeight===64)).toBe(true);
+ const src=await page.locator("#creature-sprite").getAttribute("src");
+ expect(src).toMatch(/\\/art\\/creatures\\/(mossling|glimlet|mistril|pebblin)_idle_0[0-3]\\.png$/);
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("project-wisp-egg-preview-v2")).hatch.status)).toBe("hatched");
 });
