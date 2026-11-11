@@ -18,3 +18,10 @@ test("artwork fallback is available before hatch",async({page})=>{
  const response=await page.request.get("http://127.0.0.1:8765/assets/living-egg.svg");
  expect(response.ok()).toBeTruthy();
 });
+
+test("mobile entry redirects into the real sanctuary without an iframe",async({page})=>{
+ await page.goto("http://127.0.0.1:8765/preview/mobile.html");
+ await expect(page).toHaveURL(/\/preview\/$/);
+ await expect(page.locator("[data-care]")).toHaveCount(8);
+ await expect(page.locator("iframe")).toHaveCount(0);
+});
