@@ -32,7 +32,7 @@ function importLegacy(){
 let hatchTimer=null;
 const reduceMotion=()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 function finishHatch(){if(hatchTimer!==null){clearTimeout(hatchTimer);hatchTimer=null}if(state.hatch.status==="hatching"){state=completeHatch(state);render()}}
-function progressHatch(){if(state.hatch.status==="ready"){state=beginHatch(state);persist()}if(state.hatch.status==="hatching"){if(reduceMotion()){finishHatch();return}if(hatchTimer===null)hatchTimer=setTimeout(finishHatch,1800)}}
+function progressHatch(){if(state.hatch.status==="ready"){state=beginHatch(state);persist();render();return}if(state.hatch.status==="hatching"){if(reduceMotion()){finishHatch();return}if(hatchTimer===null)hatchTimer=setTimeout(finishHatch,3200)}}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn("Preview save unavailable",e)}}
 function el(tag,text){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node}
 function render(){
