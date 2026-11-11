@@ -110,7 +110,7 @@ test("optional creature sprites fall back without broken images or save mutation
  await page.goto(base);
  await page.evaluate(async()=>{
   const {createEgg,applyCare,beginHatch,completeHatch}=await import("/simulation/egg-engine.mjs");
-  let egg=createEgg(11);const actions=["warm","sing","rest","explore","play","story","observe","comfort"];
+  let egg=createEgg(8);const actions=["warm","sing","rest","explore","play","story","observe","comfort"];
   for(let i=0;i<500&&egg.hatch.status==="incubating";i++)egg=applyCare(egg,actions[i%actions.length]);
   if(egg.hatch.status!=="ready")throw Error("Test egg not ready");
   egg=completeHatch(beginHatch(egg));
