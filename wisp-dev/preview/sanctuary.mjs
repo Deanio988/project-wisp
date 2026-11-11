@@ -13,6 +13,9 @@ let state=load();
 const creaturePlayer=createCreaturePlayer({image:$("creature-sprite"),fallback:$("family-symbol"),reducedMotion:()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches});
 let displayedFamily=null;
 let displayedEggStage=null;
+const depthLayer=document.createElement("div");
+depthLayer.id="creature-depth";depthLayer.hidden=true;depthLayer.setAttribute("aria-hidden","true");
+document.querySelector(".scene").append(depthLayer);
 const hatchCanvas=document.createElement("canvas");
 hatchCanvas.id="hatch-fx";hatchCanvas.hidden=true;hatchCanvas.setAttribute("aria-hidden","true");
 document.querySelector(".scene").append(hatchCanvas);
@@ -58,6 +61,7 @@ function render(){
  if(hatched&&displayedFamily!==state.hatch.family){displayedFamily=state.hatch.family;creaturePlayer.play(state.hatch.family)}
  if(!hatched&&displayedFamily!==null){creaturePlayer.dispose();displayedFamily=null;$("creature-sprite").hidden=true;$("family-symbol").hidden=true}
  $("art").hidden=hatched;
+ depthLayer.hidden=!hatched;
  if(hatched){displayedEggStage=null;$("art").dataset.eggStage="hatched"}
  else if(displayedEggStage!==state.stage){displayedEggStage=state.stage;setEggArtwork($("art"),state.stage)}
  if(!hatched)$("family-symbol").hidden=true;
